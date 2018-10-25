@@ -2,25 +2,58 @@ extern crate crypto;
 
 mod jacopone;
 
-
-
-
-use self::crypto::digest::Digest;
-use self::crypto::sha3::Sha3;
+use std::fs::File;	
+use std::io::prelude::*;
+use std::env;
+//use self::crypto::digest::Digest;
+//use self::crypto::sha3::Sha3;
 use jacopone::*;
 
 fn main() {
-	let message = "1000000001001001010010010010101101010101".as_bytes();
+	let args: Vec<_> = env::args().collect();
+	if args.len() == 5 {
+		let message = get_text_from_file(&args[1]);
+		let key = args[2].as_bytes();
+		let nonce = args[3].as_bytes();
+		let counter = u64::from_str_radix(&args[4], 10).unwrap();
+		let ciphertext = jacopone_encrypt_ctr(&message, &key, &nonce, counter);
+		write_to_file(&args[1], &ciphertext);
+	}else{
+		println!("usage: <filename> <key> <nonce> <counter>");
+		println!("{:?}", args.len());
+	}
+	/*let message = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".as_bytes();
+	println!("{:?}", message.len());
 	let mut nonce = Vec::new();
 	for i in 0..56 {
 		nonce.push(22);
 	}
-	let key = [10, 7, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44];
+	let key = [10, 7, 21, 33, use std::env;32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44];
 	let ciphertext = jacopone_encrypt_ctr(&message, &key, &nonce, 0);
-	println!("ciphertext: {:?}", String::from_utf8_lossy(&ciphertext));
-	let decrypted = jacopone_decrypt_ctr(&ciphertext, &key, &nonce, 0);
+	println!("ciphertext: {:?}, {}", String::from_utf8_lossy(&ciphertext), ciphertext.len());
+	let decrypted = jacopone_encrypt_ctr(&ciphertext, &key, &nonce, 0);
 	println!("decrypted: {:?}", String::from_utf8_lossy(&decrypted));
-    let m: u64 = 34;
-    
+    let m: u64 = 34;*/
+
+}
+
+fn write_to_file(filename: &str, content: &[u8]){
+	let mut file = match File::create(filename) {
+        Ok(file) => file,
+        Err(_) => panic!("no such file"),
+    };
+    file.write_all(content);
+}
+
+fn get_text_from_file(filename: &str) -> Vec<u8>{
+    let mut file = match File::open(filename) {
+        Ok(file) => file,
+        Err(_) => panic!("no such file"),
+    };
+    let mut text = Vec::new();
+    file.read_to_end(&mut text)
+        .ok()
+        .expect("failed to read!");
+    text
 }
 
