@@ -2,13 +2,16 @@ use crypto::digest::Digest;
 use crypto::sha3::Sha3;
 use std::sync::mpsc;
 
-pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], counter: u64, thread: u8) -> Vec<u8> {
+pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], counter: u64, thread_count: u8) -> Vec<u8> {
     //check key, counter and nonce length
     if nonce.len() != 60 {
         println!("{:?}", nonce.len());
         panic!{"invalid nonce length"};
     }
 
+    if thread_count > 4 {
+        panic!("invalid thread number: max = 4");
+    }
     
 
     let (tx1, rx1) = mpsc::channel();
@@ -17,19 +20,20 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
     let (tx4, rx4) = mpsc::channel();
 
     let txv = [tx1, tx2, tx3, tx4];    
+    let rxv = [rx1, rx2, rx3, rx4];
 
     crossbeam::scope(|scope|{
-        for i in 0..thread as usize {
-            let tx = txv[i].clone();
+        for i in 0..thread_count as usize {
+            let tx = mpsc::Sender::clone(&txv[i]);
             scope.spawn(move ||{
-                println!("core{} started", i);
-                let mut c = counter;
+                println!("thread{} started", i);
+                let mut c = counter + ((message.len() as u64 / 64) / thread_count as u64) * i as u64;
                 let mut ciphertext = Vec::new();
-                for i in 0..(message.len()/64)/4 {
+                for j in ((message.len() / 64) / thread_count as usize) * i..((message.len() / 64) / thread_count as usize) * (i + 1) {
                     let block_counter = get_block_counter(&nonce, & mut c);
-                    ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
+                    ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * j.. 64 * j + 64]));
                 }
-                println!("core{} finished", i);
+                println!("thread{} finished", i);
                 tx.send(ciphertext).unwrap();
                 });
         }/*
@@ -83,19 +87,24 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
 
     });
 
-    println!("core joined");
+    let mut blocks = Vec::new();
     let mut c = counter + (message.len()/64) as u64;
-    let mut block1 = rx1.recv().unwrap();
-    let block2 = rx2.recv().unwrap();
+    for i in 0..thread_count as usize {
+        blocks.push(rxv[i].recv().unwrap());
+        println!("thread{} joined", i); 
+    }
+    let mut ciphertext = Vec::new();
+    for i in 0..thread_count as usize {
+        ciphertext.extend_from_slice(&blocks[i]);
+    }
+
+    /*let block2 = rx2.recv().unwrap();
     let block3 = rx3.recv().unwrap();
-    let block4 = rx4.recv().unwrap();
+    let block4 = rx4.recv().unwrap();*/
     let block_counter = get_block_counter(nonce, & mut c);
     let ending = xor(&message[(message.len()/64) * 64..], &block_encrypt(&block_counter, key));
-    block1.extend_from_slice(&block2);
-    block1.extend_from_slice(&block3);
-    block1.extend_from_slice(&block4);
-    block1.extend_from_slice(&ending);
-    block1
+    ciphertext.extend_from_slice(&ending);
+    ciphertext
 }
 pub fn jacopone_encrypt_ctr(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
     //check key, counter and nonce length
