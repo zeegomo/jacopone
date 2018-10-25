@@ -2,7 +2,32 @@
 use crypto::digest::Digest;
 use crypto::sha3::Sha3;
 
-pub fn jacopone_encrypt(message: &[u8], key: &[u8]) -> Vec<u8> {
+pub fn jacopone_encrypt_ctr(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+    //check key, counter and nonce length
+    let mut c = counter;
+    let mut ciphertext = Vec::new();
+    for i in 0..message.len()/64 {
+        let block_counter = get_block_counter(nonce, & mut c);
+        ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, key), &message[64 * i.. 64 * i + 64]));
+    }
+    let block_counter = get_block_counter(nonce, & mut c);
+    ciphertext.extend_from_slice(&xor(&message[message.len()/64..], &block_encrypt(&block_counter, key)));
+    ciphertext
+}
+
+pub fn jacopone_decrypt_ctr(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+    let mut c = counter;
+    let mut plaintext = Vec::new();
+    for i in 0..message.len()/64 {
+        let block_counter = get_block_counter(nonce, & mut c);
+        plaintext.extend_from_slice(&xor(&block_decrypt(&block_counter, key), &message[64 * i.. 64 * i + 64]));
+    }
+    let block_counter = get_block_counter(nonce, & mut c);
+    plaintext.extend_from_slice(&xor(&message[message.len()/64..], &block_encrypt(&block_counter, key)));
+    plaintext   
+}
+
+fn block_encrypt(message: &[u8], key: &[u8]) -> Vec<u8> {
     let mut ciphertext = pad(message, 64);
     for _i in 0..4 {
         ciphertext = feistel_round(&ciphertext, key);
@@ -11,7 +36,7 @@ pub fn jacopone_encrypt(message: &[u8], key: &[u8]) -> Vec<u8> {
     ciphertext
 } 
 
-pub fn jacopone_decrypt(message: &[u8], key: &[u8]) -> Vec<u8> {
+fn block_decrypt(message: &[u8], key: &[u8]) -> Vec<u8> {
     let mut plaintext = message.clone().to_vec();
     for _i in 0..4 {
         plaintext = swap(&plaintext);
@@ -70,4 +95,22 @@ fn hex_to_bytes(string: &str) -> Vec<u8> {
         }
     }
     bytes
+}
+
+fn get_block_counter(nonce: &[u8], counter: & mut u64) -> Vec<u8> {
+    let mut n = nonce.clone().to_vec();
+    n.extend_from_slice(&(to_bytes(*counter)));
+    counter.wrapping_add(1);
+    n  
+}
+
+fn to_bytes(n: u64) -> Vec<u8> {
+    let mut n = n;
+    let mut v = Vec::new();
+    for i in 0..4{
+        v.push((n & 256) as u8);
+        n = n >> 8;
+    }
+    println!("{:?}", v);
+    v
 }
