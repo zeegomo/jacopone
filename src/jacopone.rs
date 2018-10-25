@@ -2,7 +2,7 @@ use crypto::digest::Digest;
 use crypto::sha3::Sha3;
 use std::sync::mpsc;
 
-pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], counter: u64, thread: u8) -> Vec<u8> {
     //check key, counter and nonce length
     if nonce.len() != 60 {
         println!("{:?}", nonce.len());
@@ -19,7 +19,7 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
     let txv = [tx1, tx2, tx3, tx4];    
 
     crossbeam::scope(|scope|{
-        for i in 0..4 {
+        for i in 0..thread as usize {
             let tx = txv[i].clone();
             scope.spawn(move ||{
                 println!("core{} started", i);
