@@ -1,13 +1,104 @@
-
 use crypto::digest::Digest;
 use crypto::sha3::Sha3;
+use std::sync::mpsc;
 
-pub fn jacopone_encrypt_ctr(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
     //check key, counter and nonce length
     if nonce.len() != 60 {
+        println!("{:?}", nonce.len());
         panic!{"invalid nonce length"};
     }
+
     
+
+    let (tx1, rx1) = mpsc::channel();
+    let (tx2, rx2) = mpsc::channel();
+    let (tx3, rx3) = mpsc::channel();
+    let (tx4, rx4) = mpsc::channel();
+
+    let txv = [tx1, tx2, tx3, tx4];    
+
+    crossbeam::scope(|scope|{
+        for i in 0..4 {
+            let tx = txv[i].clone();
+            scope.spawn(move ||{
+                println!("core{} started", i);
+                let mut c = counter;
+                let mut ciphertext = Vec::new();
+                for i in 0..(message.len()/64)/4 {
+                    let block_counter = get_block_counter(&nonce, & mut c);
+                    ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
+                }
+                println!("core{} finished", i);
+                tx.send(ciphertext).unwrap();
+                });
+        }/*
+        scope.spawn(move ||{
+        println!("core1 started");
+        let mut c = counter;
+        let mut ciphertext = Vec::new();
+        for i in 0..(message.len()/64)/4 {
+            let block_counter = get_block_counter(&nonce, & mut c);
+            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
+        }
+        println!("core1 finished");
+        tx1.send(ciphertext).unwrap();
+        });
+
+        scope.spawn(move ||{
+        println!("core2 started");
+        let mut c = counter + ((message.len()/64)/4) as u64;
+        let mut ciphertext = Vec::new();
+        for i in(message.len()/64)/4..(message.len()/64)/2 {
+            let block_counter = get_block_counter(&nonce, & mut c);
+            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
+        }
+        println!("core2 finished");
+        tx2.send(ciphertext).unwrap();
+        });
+
+        scope.spawn(move ||{
+        println!("core3 started");
+        let mut c = counter + ((message.len()/64)/2) as u64;
+        let mut ciphertext = Vec::new();
+        for i in(message.len()/64)/2..((message.len()/64)/4)*3 {
+            let block_counter = get_block_counter(&nonce, & mut c);
+            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
+        }
+        println!("core3 finished");
+        tx3.send(ciphertext).unwrap();
+        });
+
+        scope.spawn(move ||{
+        println!("core4 started");
+        let mut c = counter + (((message.len()/64)/4)*3) as u64;
+        let mut ciphertext = Vec::new();
+        for i in ((message.len()/64)/4)*3..(message.len()/64) {
+            let block_counter = get_block_counter(&nonce, & mut c);
+            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
+        }
+        println!("core4 finished");
+        tx4.send(ciphertext).unwrap();
+        });*/
+
+    });
+
+    println!("core joined");
+    let mut c = counter + (message.len()/64) as u64;
+    let mut block1 = rx1.recv().unwrap();
+    let block2 = rx2.recv().unwrap();
+    let block3 = rx3.recv().unwrap();
+    let block4 = rx4.recv().unwrap();
+    let block_counter = get_block_counter(nonce, & mut c);
+    let ending = xor(&message[(message.len()/64) * 64..], &block_encrypt(&block_counter, key));
+    block1.extend_from_slice(&block2);
+    block1.extend_from_slice(&block3);
+    block1.extend_from_slice(&block4);
+    block1.extend_from_slice(&ending);
+    block1
+}
+pub fn jacopone_encrypt_ctr(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+    //check key, counter and nonce length
     let mut c = counter;
     let mut ciphertext = Vec::new();
     for i in 0..message.len()/64 {
@@ -56,7 +147,7 @@ pub fn xor(s1: &[u8], s2: &[u8]) -> Vec<u8> {
     s1.iter().zip(s2).map(|(x, y)| x ^ y).collect() 
 }
 
-fn pad(text: &[u8], length: u8) -> Vec<u8> {
+/*fn pad(text: &[u8], length: u8) -> Vec<u8> {
     let mut padded = Vec::new();
     for i in 0..text.len() {
         padded.push(text[i]);
@@ -70,7 +161,7 @@ fn pad(text: &[u8], length: u8) -> Vec<u8> {
         padded.push(padding);
     }
     padded
-}
+}*/
 
 fn hash(block: &[u8], key: &[u8]) -> Vec<u8> {
     let mut hasher = Sha3::sha3_256();
