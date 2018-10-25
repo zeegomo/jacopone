@@ -22,18 +22,6 @@ fn main() {
 		println!("usage: <filename> <key> <nonce> <counter>");
 		println!("{:?}", args.len());
 	}
-	/*let message = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".as_bytes();
-	println!("{:?}", message.len());
-	let mut nonce = Vec::new();
-	for i in 0..56 {
-		nonce.push(22);
-	}
-	let key = [10, 7, 21, 33, use std::env;32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44];
-	let ciphertext = jacopone_encrypt_ctr(&message, &key, &nonce, 0);
-	println!("ciphertext: {:?}, {}", String::from_utf8_lossy(&ciphertext), ciphertext.len());
-	let decrypted = jacopone_encrypt_ctr(&ciphertext, &key, &nonce, 0);
-	println!("decrypted: {:?}", String::from_utf8_lossy(&decrypted));
-    let m: u64 = 34;*/
 
 }
 

@@ -4,6 +4,10 @@ use crypto::sha3::Sha3;
 
 pub fn jacopone_encrypt_ctr(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
     //check key, counter and nonce length
+    if nonce.len() != 60 {
+        panic!{"invalid nonce length"};
+    }
+    
     let mut c = counter;
     let mut ciphertext = Vec::new();
     for i in 0..message.len()/64 {
