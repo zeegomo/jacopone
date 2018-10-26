@@ -12,16 +12,26 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
     if thread_count > 4 {
         panic!("invalid thread number: max = 4");
     }
-    
 
-    let (tx1, rx1) = mpsc::channel();
+    let mut txv = Vec::new();
+    let mut rxv = Vec::new();
+    
+    for i in 0..thread_count {
+        let (tx1, rx1) = mpsc::channel();
+        txv.push(tx1);
+        rxv.push(rx1);
+    }
+
+    /*let (tx1, rx1) = mpsc::channel();
     let (tx2, rx2) = mpsc::channel();
     let (tx3, rx3) = mpsc::channel();
     let (tx4, rx4) = mpsc::channel();
 
     let txv = [tx1, tx2, tx3, tx4];    
     let rxv = [rx1, rx2, rx3, rx4];
+    */
 
+    
     crossbeam::scope(|scope|{
         for i in 0..thread_count as usize {
             let tx = mpsc::Sender::clone(&txv[i]);
@@ -36,55 +46,7 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
                 println!("thread{} finished", i);
                 tx.send(ciphertext).unwrap();
                 });
-        }/*
-        scope.spawn(move ||{
-        println!("core1 started");
-        let mut c = counter;
-        let mut ciphertext = Vec::new();
-        for i in 0..(message.len()/64)/4 {
-            let block_counter = get_block_counter(&nonce, & mut c);
-            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
         }
-        println!("core1 finished");
-        tx1.send(ciphertext).unwrap();
-        });
-
-        scope.spawn(move ||{
-        println!("core2 started");
-        let mut c = counter + ((message.len()/64)/4) as u64;
-        let mut ciphertext = Vec::new();
-        for i in(message.len()/64)/4..(message.len()/64)/2 {
-            let block_counter = get_block_counter(&nonce, & mut c);
-            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
-        }
-        println!("core2 finished");
-        tx2.send(ciphertext).unwrap();
-        });
-
-        scope.spawn(move ||{
-        println!("core3 started");
-        let mut c = counter + ((message.len()/64)/2) as u64;
-        let mut ciphertext = Vec::new();
-        for i in(message.len()/64)/2..((message.len()/64)/4)*3 {
-            let block_counter = get_block_counter(&nonce, & mut c);
-            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
-        }
-        println!("core3 finished");
-        tx3.send(ciphertext).unwrap();
-        });
-
-        scope.spawn(move ||{
-        println!("core4 started");
-        let mut c = counter + (((message.len()/64)/4)*3) as u64;
-        let mut ciphertext = Vec::new();
-        for i in ((message.len()/64)/4)*3..(message.len()/64) {
-            let block_counter = get_block_counter(&nonce, & mut c);
-            ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
-        }
-        println!("core4 finished");
-        tx4.send(ciphertext).unwrap();
-        });*/
-
     });
 
     let mut blocks = Vec::new();
