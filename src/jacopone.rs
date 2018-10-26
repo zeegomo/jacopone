@@ -54,18 +54,23 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
     //receive results from threads
     let mut blocks = Vec::new();
     for i in 0..thread_count as usize {
-        blocks.push(rxv[i].recv().unwrap());
-        println!("thread{} joined", i); 
+        if blocks_index[i][1] - blocks_index[i][0] > 0 {
+            blocks.push(rxv[i].recv().unwrap());
+            println!("thread{} joined", i); 
+        }
     }
     let mut ciphertext = Vec::new();
     for i in 0..thread_count as usize {
-        ciphertext.extend_from_slice(&blocks[i]);
+        if i < blocks.len() {
+            ciphertext.extend_from_slice(&blocks[i]);
+        }
     }
 
     //encryot (or decrypt) the remaining bytes
-    let mut c = counter + (message.len()/64) as u64;
+    let mut c = counter + (blocks_index[blocks_index.len() -1][1]) as u64;
+    println!("c: {:?}", c);
     let block_counter = get_block_counter(nonce, & mut c);
-    let ending = xor(&message[(message.len()/64) * 64..], &block_encrypt(&block_counter, key));
+    let ending = xor(&message[blocks_index[blocks_index.len() -1][1] as usize * 64..], &block_encrypt(&block_counter, key));
     ciphertext.extend_from_slice(&ending);
     ciphertext
 }
