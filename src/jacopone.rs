@@ -24,7 +24,6 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
     }
 
     let blocks_index = get_thread_blocks(message.len(), thread_count);
-    println!("blocks_index:{:?}", blocks_index);
     //spawnw thread_count threads
     crossbeam::scope(|scope|{
         for i in 0..thread_count as usize {
@@ -35,15 +34,7 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
                 scope.spawn(move ||{
                     println!("thread{} started", i);
                     let mut c = counter + start as u64;
-                    println!("counter: {:?}", c);
-                    println!("message len: {:?}", ((message.len() as u64)));
-                    println!("block start: {:?}", start * 64);
-                    println!("block end: {:?}", end * 64);
-                    let mut ciphertext = jacopone_encrypt_ctr(&message[start * 64 .. end * 64], key, nonce, c);/*)
-                for j in ((message.len() / 64) / thread_count as usize) * i..((message.len() / 64) / thread_count as usize) * (i + 1) {
-                    let block_counter = get_block_counter(&nonce, & mut c);
-                    ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * j.. 64 * j + 64]));
-                }*/
+                    let mut ciphertext = jacopone_encrypt_ctr(&message[start * 64 .. end * 64], key, nonce, c);
                     println!("thread{} finished", i);
                     tx.send(ciphertext).unwrap();
                     });
@@ -66,7 +57,7 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
         }
     }
 
-    //encryot (or decrypt) the remaining bytes
+    //encrypt (or decrypt) the remaining bytes
     let mut c = counter + (blocks_index[blocks_index.len() -1][1]) as u64;
     println!("c: {:?}", c);
     let block_counter = get_block_counter(nonce, & mut c);
