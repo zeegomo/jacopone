@@ -17,7 +17,7 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
     let mut rxv = Vec::new();
     
     //create transmitter (tx) and receiver (rx) for each thread
-    for i in 0..thread_count {
+    for _i in 0..thread_count {
         let (tx1, rx1) = mpsc::channel();
         txv.push(tx1);
         rxv.push(rx1);
@@ -32,8 +32,8 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
             let end = blocks_index[i][1] as usize;
             if end - start > 0 {
                 scope.spawn(move ||{
-                    let mut c = counter + start as u64;
-                    let mut ciphertext = jacopone_encrypt_ctr(&message[start * 64 .. end * 64], key, nonce, c);
+                    let c = counter + start as u64;
+                    let ciphertext = jacopone_encrypt_ctr(&message[start * 64 .. end * 64], key, nonce, c);
                     tx.send(ciphertext).unwrap();
                     });
                 }      
@@ -66,11 +66,9 @@ pub fn get_thread_blocks(message_len: usize, thread_count: u8) -> Vec<[u64; 2]>{
     let message_len = message_len as u64;
     let mut partition = Vec::new();
     let mut blocks_index = Vec::new(); 
-    println!("{:?}", message_len);
     let block_num = message_len / 64;
-    println!("{:?}", block_num);
     //if block_num / thread_count  as u64 > 0 {
-        for i in 0..thread_count {
+        for _i in 0..thread_count {
             partition.push(block_num / thread_count as u64);
         }
     
