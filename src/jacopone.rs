@@ -32,10 +32,8 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
             let end = blocks_index[i][1] as usize;
             if end - start > 0 {
                 scope.spawn(move ||{
-                    println!("thread{} started", i);
                     let mut c = counter + start as u64;
                     let mut ciphertext = jacopone_encrypt_ctr(&message[start * 64 .. end * 64], key, nonce, c);
-                    println!("thread{} finished", i);
                     tx.send(ciphertext).unwrap();
                     });
                 }      
@@ -46,8 +44,7 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
     let mut blocks = Vec::new();
     for i in 0..thread_count as usize {
         if blocks_index[i][1] - blocks_index[i][0] > 0 {
-            blocks.push(rxv[i].recv().unwrap());
-            println!("thread{} joined", i); 
+            blocks.push(rxv[i].recv().unwrap()); 
         }
     }
     let mut ciphertext = Vec::new();
@@ -57,9 +54,8 @@ pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], c
         }
     }
 
-    //encrypt (or decrypt) the remaining bytes
+    //encryt (or decrypt) the remaining bytes
     let mut c = counter + (blocks_index[blocks_index.len() -1][1]) as u64;
-    println!("c: {:?}", c);
     let block_counter = get_block_counter(nonce, & mut c);
     let ending = xor(&message[blocks_index[blocks_index.len() -1][1] as usize * 64..], &block_encrypt(&block_counter, key));
     ciphertext.extend_from_slice(&ending);
@@ -79,10 +75,8 @@ pub fn get_thread_blocks(message_len: usize, thread_count: u8) -> Vec<[u64; 2]>{
         }
     
     let mut res = block_num - (block_num / thread_count as u64) * thread_count as u64;
-    println!("partition {:?}", partition);
     for i in 0..thread_count as usize {
         if res > 0 {
-            println!("partition {:?}, res: {}", partition, res);
             partition[i] = partition[i] + 1;
             res = res - 1;
         }
