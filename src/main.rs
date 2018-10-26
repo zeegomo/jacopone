@@ -22,7 +22,7 @@ fn main() {
 		let ciphertext = jacopone_encrypt_ctr_threaded(&message, &key, &nonce, counter, 4);
 		println!("{:?}",now.elapsed().as_secs() as f64
            + now.elapsed().subsec_nanos() as f64 * 1e-9 );*/
-        let jacopone = jacopone::jacopone::new(4);
+        let mut jacopone = jacopone::Jacopone::new(4);
         let ciphertext = jacopone.encrypt(&message, &key, &nonce, counter);
 		write_to_file(&args[1], &ciphertext);
 		
