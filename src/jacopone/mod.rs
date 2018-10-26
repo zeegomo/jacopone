@@ -1,21 +1,40 @@
 mod utils;
+mod parallel;
 use self::utils::*;
+use self::parallel::{Parallel};
+use self::parallel::parallelinterface::ParallelInterface;
 use std::sync::mpsc;
 
-pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], counter: u64, thread_count: u8) -> Vec<u8> {
-    //check key, counter and nonce length
-    if nonce.len() != 60 {
-        println!("{:?}", nonce.len());
-        panic!{"invalid nonce length"};
+
+pub struct jacopone{
+    parallel_threads: Parallel,
+}
+
+impl jacopone {
+    pub fn new(thread_count: u8) -> jacopone {
+        jacopone {parallel_threads: parallel::Parallel::new(thread_count, jacopone_encrypt_ctr)}
     }
 
-    if thread_count > 8 {
-        panic!("invalid thread number: max = 8");
+    pub fn encrypt(&self, message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+        assert_eq!(nonce.len(), 60, "invalid nonce len: {}. required: {}", nonce.len(), 60);
+        //let cipher_data = CipherData {message: message, key: key, nonce: nonce, counter: counter};
+        let mut ciphertext = self.parallel_threads.encrypt(message, key, nonce, counter);
+        let mut c = counter + (message.len()/64) as u64;
+        let block_counter = get_block_counter(nonce, & mut c);
+        let ending = xor(&message[message.len()/64 * 64..], &block_encrypt(&block_counter, key));
+        ciphertext.extend_from_slice(&ending);
+        ciphertext
     }
+}
+
+pub fn jacopone_encrypt_ctr_threaded(message: &[u8], key: &[u8], nonce: &[u8], counter: u64, thread_count: u8) -> Vec<u8> {
+    assert_eq!(nonce.len(), 60, "invalid nonce len: {}. required: {}", nonce.len(), 60);
+    assert!(thread_count < 8, "invalid thread count: {}. max: {}", thread_count, 8);
 
     let mut txv = Vec::new();
     let mut rxv = Vec::new();
     
+    //let parallel_interface = ParallelConcat::new(4);
     //create transmitter (tx) and receiver (rx) for each thread
     for _i in 0..thread_count {
         let (tx1, rx1) = mpsc::channel();
