@@ -1,8 +1,9 @@
 extern crate crypto;
 extern crate crossbeam;
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 
 mod jacopone;
+mod test;
 
 use std::fs::File;	
 use std::io::prelude::*;
@@ -17,11 +18,11 @@ fn main() {
 		let nonce = args[3].as_bytes().clone();
 		let counter = u64::from_str_radix(&args[4], 10).unwrap();
 		let now = Instant::now();
-		let ciphertext = jacopone_encrypt_ctr_threaded(&message, &key, &nonce, counter, 3);
+		let ciphertext = jacopone_encrypt_ctr_threaded(&message, &key, &nonce, counter, 2);
 		println!("{:?}",now.elapsed().as_secs() as f64
            + now.elapsed().subsec_nanos() as f64 * 1e-9 );
-		
 		write_to_file(&args[1], &ciphertext);
+		
 	}else{
 		println!("usage: <filename> <key> <nonce> <counter>");
 		println!("{:?}", args.len());
