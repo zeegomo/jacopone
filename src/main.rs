@@ -24,7 +24,7 @@ fn main() {
 		write_to_file(&args[1], &ciphertext);
 		
 	}else{
-		println!("usage: <filename> <key> <nonce> <counter>");
+		println!("usage: <filename> <key> <nonce> <counter> <number_of_threads>");
 		println!("{:?}", args.len());
 	}
 
