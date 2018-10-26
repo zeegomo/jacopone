@@ -1,4 +1,4 @@
-use std::sync::mpsc::{Sender, Receiver};
+/*use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
 
 pub struct ParallelInterface {
@@ -36,4 +36,4 @@ impl ParallelInterface {
     	ciphertext
 	}
 
-}
+}*/
