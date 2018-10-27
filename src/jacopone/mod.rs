@@ -18,15 +18,15 @@ impl Jacopone {
 
     pub fn encrypt(&self, message: Arc<Vec<u8>>, key: Arc<Vec<u8>>, nonce: Arc<Vec<u8>>, counter: u64) -> Vec<u8> {
         assert_eq!(nonce.len(), 60, "invalid nonce len: {}. required: {}", nonce.len(), 60);
-        let cipher_data = CipherData {message: Arc::clone(&message), key: Arc::clone(&key), nonce: Arc::clone(&nonce), counter: counter};
+        //let cipher_data = CipherData {message: Arc::clone(&message), key: Arc::clone(&key), nonce: Arc::clone(&nonce), counter: counter};
 
         let cipherdata = CipherData{message:  Arc::clone(&message), key: Arc::clone(&key), nonce: Arc::clone(&nonce), counter: counter};
         
         //parallel encryption/decryption
-        let mut ciphertext = self.parallel_threads.encrypt(Arc::clone(&message), Arc::clone(&key), Arc::clone(&nonce), counter);
+        let mut ciphertext = self.parallel_threads.encrypt(CipherData::clone(&cipherdata));
         
         //encryption/decryption of last portion
-        let ending = FinalThread::finalize_encryption(Arc::clone(&message), Arc::clone(&key), Arc::clone(&nonce), counter);
+        let ending = FinalThread::finalize_encryption(cipherdata);
         ciphertext.extend_from_slice(&ending);
         ciphertext
     }

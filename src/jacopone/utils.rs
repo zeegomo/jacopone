@@ -132,3 +132,9 @@ pub struct CipherData{
     pub nonce: Arc<Vec<u8>>,
     pub counter: u64,
 }
+
+impl CipherData {
+    pub fn clone(other: &CipherData) -> CipherData {
+        CipherData {message: Arc::clone(&other.message), key: Arc::clone(&other.key), nonce: Arc::clone(&other.nonce), counter: other.counter}
+    }
+}
