@@ -21,11 +21,13 @@ fn main() {
 		let now = Instant::now(); 
 		let threads  = u8::from_str_radix(&args[5], 10).unwrap();
 
-        let mut jacopone = jacopone::Jacopone::new(threads);
+        let jacopone = jacopone::Jacopone::new(threads);
         let ciphertext = jacopone.encrypt(&message, &key, &nonce, counter);
         println!("{:?}",now.elapsed().as_secs() as f64
            + now.elapsed().subsec_nanos() as f64 * 1e-9 );
 		write_to_file(&args[1], &ciphertext);
+
+
 		
 	}else{
 		println!("usage: <filename> <key> <nonce> <counter> <number_of_threads>");

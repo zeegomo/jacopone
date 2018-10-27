@@ -1,5 +1,6 @@
 use crypto::sha3::Sha3;
 use crypto::digest::Digest;
+use std::sync::Arc;
 
 pub fn to_bytes(n: u64) -> Vec<u8> {
     let mut n = n;
@@ -76,6 +77,13 @@ pub fn get_thread_blocks(message_len: usize, thread_count: u8) -> Vec<[u64; 2]>{
         last = last + partition[i];
     }
 
+    for i in 0..blocks_index.len() {
+        if blocks_index[i][0] == blocks_index[i][1] {
+            blocks_index.truncate(i);
+            break;
+        }
+    }
+
     blocks_index
 }
 
@@ -118,3 +126,9 @@ pub fn feistel_round(block: &[u8], key: &[u8]) -> Vec<u8> {
     l
 }
 
+pub struct CipherData{
+    message: Arc<Vec<u8>>,
+    key: Arc<Vec<u8>>,
+    nonce: Arc<Vec<u8>>,
+    counter: u64,
+}
