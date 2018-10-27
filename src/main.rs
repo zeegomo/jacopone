@@ -20,10 +20,11 @@ fn main() {
 		let counter = u64::from_str_radix(&args[4], 10).unwrap();
 		let now = Instant::now(); /*
 		let ciphertext = jacopone_encrypt_ctr_threaded(&message, &key, &nonce, counter, 4);
-		println!("{:?}",now.elapsed().as_secs() as f64
-           + now.elapsed().subsec_nanos() as f64 * 1e-9 );*/
-        let mut jacopone = jacopone::Jacopone::new(4);
+		*/
+        let mut jacopone = jacopone::Jacopone::new(2);
         let ciphertext = jacopone.encrypt(&message, &key, &nonce, counter);
+        println!("{:?}",now.elapsed().as_secs() as f64
+           + now.elapsed().subsec_nanos() as f64 * 1e-9 );
 		write_to_file(&args[1], &ciphertext);
 		
 	}else{
