@@ -12,6 +12,7 @@ mod tests {
     #[test]
     fn check_decrypt() {
     	let mut rng = thread_rng();
+        let jacopone = Jacopone::new(4);
     	let mut message = lines_from_file("/home/zeegomo/Documents/crypto/ciphers/jacopone/src/strings.txt");
 		for i in 0..message.len() {
 			let mut nonce: Vec<u8> = Vec::new();
@@ -20,8 +21,8 @@ mod tests {
 			}
 			let key = [10, 7, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44];
 			let counter: u64 = rand::random::<u64>();
-			let ciphertext = jacopone_encrypt_ctr_threaded((&message[i]).as_bytes(), &key, &nonce, counter, 2);
-			let plaintext = jacopone_encrypt_ctr_threaded(&ciphertext, &key, &nonce, counter, 2);
+			let ciphertext = jacopone.encrypt((&message[i]).as_bytes(), &key, &nonce, counter);
+			let plaintext = jacopone.encrypt(&ciphertext, &key, &nonce, counter);
 
 			//println!("{} {}", (&message[i]).as_bytes().len(), plaintext.len());
 
