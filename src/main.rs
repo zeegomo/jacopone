@@ -8,6 +8,7 @@ mod test;
 use std::fs::File;	
 use std::io::prelude::*;
 use std::env;
+use std::sync::Arc;
 use jacopone::*;
 
 fn main() {
@@ -22,7 +23,7 @@ fn main() {
 		let threads  = u8::from_str_radix(&args[5], 10).unwrap();
 
         let jacopone = jacopone::Jacopone::new(threads);
-        let ciphertext = jacopone.encrypt(&message, &key, &nonce, counter);
+        let ciphertext = jacopone.encrypt(Arc::new(message), Arc::new(key.to_vec()), Arc::new(nonce.to_vec()), counter);
         println!("{:?}",now.elapsed().as_secs() as f64
            + now.elapsed().subsec_nanos() as f64 * 1e-9 );
 		write_to_file(&args[1], &ciphertext);

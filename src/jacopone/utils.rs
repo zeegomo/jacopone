@@ -87,16 +87,16 @@ pub fn get_thread_blocks(message_len: usize, thread_count: u8) -> Vec<[u64; 2]>{
     blocks_index
 }
 
-pub fn jacopone_encrypt_ctr(message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+pub fn jacopone_encrypt_ctr(message: Arc<Vec<u8>>, key:Arc<Vec<u8>>, nonce: Arc<Vec<u8>>, counter: u64) -> Vec<u8> {
     //check key, counter and nonc
     let mut c = counter;
     let mut ciphertext = Vec::new();
     for i in 0..message.len()/64 {
-        let block_counter = get_block_counter(nonce, & mut c);
-        ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, key), &message[64 * i.. 64 * i + 64]));
+        let block_counter = get_block_counter(&nonce, & mut c);
+        ciphertext.extend_from_slice(&xor(&block_encrypt(&block_counter, &key), &message[64 * i.. 64 * i + 64]));
     }
-    let block_counter = get_block_counter(nonce, & mut c);
-    ciphertext.extend_from_slice(&xor(&message[(message.len()/64) * 64..], &block_encrypt(&block_counter, key)));
+    let block_counter = get_block_counter(&nonce, & mut c);
+    ciphertext.extend_from_slice(&xor(&message[(message.len()/64) * 64..], &block_encrypt(&block_counter, &key)));
     ciphertext
 }
 
@@ -127,8 +127,8 @@ pub fn feistel_round(block: &[u8], key: &[u8]) -> Vec<u8> {
 }
 
 pub struct CipherData{
-    message: Arc<Vec<u8>>,
-    key: Arc<Vec<u8>>,
-    nonce: Arc<Vec<u8>>,
-    counter: u64,
+    pub message: Arc<Vec<u8>>,
+    pub key: Arc<Vec<u8>>,
+    pub nonce: Arc<Vec<u8>>,
+    pub counter: u64,
 }

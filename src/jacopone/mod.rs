@@ -13,19 +13,20 @@ impl Jacopone {
 
     //create a jacopone enviroment to encrypt/decrypt usong thread_count threads
     pub fn new(thread_count: u8) -> Jacopone {
-        Jacopone {parallel_threads: thread::ParallelThread::new(thread_count, jacopone_encrypt_ctr)}
+        Jacopone {parallel_threads: thread::ParallelThread::new(thread_count)}
     }
 
-    pub fn encrypt(&self, message: &[u8], key: &[u8], nonce: &[u8], counter: u64) -> Vec<u8> {
+    pub fn encrypt(&self, message: Arc<Vec<u8>>, key: Arc<Vec<u8>>, nonce: Arc<Vec<u8>>, counter: u64) -> Vec<u8> {
         assert_eq!(nonce.len(), 60, "invalid nonce len: {}. required: {}", nonce.len(), 60);
-        //let cipher_data = CipherData {message: message, key: key, nonce: nonce, counter: counter};
+        let cipher_data = CipherData {message: Arc::clone(&message), key: Arc::clone(&key), nonce: Arc::clone(&nonce), counter: counter};
 
+        let cipherdata = CipherData{message:  Arc::clone(&message), key: Arc::clone(&key), nonce: Arc::clone(&nonce), counter: counter};
+        
         //parallel encryption/decryption
-        let mut ciphertext = self.parallel_threads.encrypt(message, key, nonce, counter);
+        let mut ciphertext = self.parallel_threads.encrypt(Arc::clone(&message), Arc::clone(&key), Arc::clone(&nonce), counter);
         
         //encryption/decryption of last portion
-        let ending = FinalThread::finalize_encryption(message, key, nonce, counter);
-        //let cipherdata = CipherData{message:  Arc<message>, key: &key, nonce: &nonce, counter: counter};
+        let ending = FinalThread::finalize_encryption(Arc::clone(&message), Arc::clone(&key), Arc::clone(&nonce), counter);
         ciphertext.extend_from_slice(&ending);
         ciphertext
     }
