@@ -1,7 +1,11 @@
-pub use super::utils::*;
-use std::sync::Arc;
-pub mod parallelinterface;
+mod parallelinterface;
+mod cipher;
+mod utils;
 
+use super::cipherdata::*;
+use self::utils::*;
+use std::sync::Arc;
+use self::cipher::*;
 
 
 pub struct FinalThread {
@@ -41,17 +45,10 @@ impl ParallelThread {
             	let tx = self.parallel_interface.get_tx(i as u8);
             	let start = blocks_index[i][0] as usize;
             	let end = blocks_index[i][1] as usize;
-            	
-            	/*
-            	let message = Arc::clone(&(data.message));
-            	let nonce = Arc::clone(&(data.nonce));
-            	let key = Arc::clone(&(data.key));
-            	let counter = data.counter;*/
-            	let data = CipherData::clone(&data);
+            	let data = CipherData::clone_slice(&data, start, end);
 
                 scope.spawn(move ||{
-                    let c = data.counter + start as u64;
-                    let ciphertext = jacopone_encrypt_ctr(Arc::new(data.message[start * 64 .. end * 64].to_vec()), data.key, data.nonce, c);
+                    let ciphertext = jacopone_encrypt_ctr(data);
                     tx.send(ciphertext).unwrap();
                 });
             	      
