@@ -1,7 +1,7 @@
 mod thread;
-mod cipherdata;
+pub mod cipherdata;
 
-use self::cipherdata::*;
+pub use self::cipherdata::*;
 use self::thread::{ParallelThread, FinalThread};
 use std::sync::Arc;
 
@@ -16,16 +16,14 @@ impl Jacopone {
         Jacopone {parallel_threads: thread::ParallelThread::new(thread_count)}
     }
 
-    pub fn encrypt(&self, message: Arc<Vec<u8>>, key: Arc<Vec<u8>>, nonce: Arc<Vec<u8>>, counter: u64) -> Vec<u8> {
-        assert_eq!(nonce.len(), 60, "invalid nonce len: {}. required: {}", nonce.len(), 60);
-
-        let cipherdata = CipherData{message:  Arc::clone(&message), key: Arc::clone(&key), nonce: Arc::clone(&nonce), counter: counter};
+    pub fn encrypt(&self, data: CipherData) -> Vec<u8> {
+        assert_eq!(data.nonce.len(), 60, "invalid nonce len: {}. required: {}", data.nonce.len(), 60);
         
         //parallel encryption/decryption
-        let mut ciphertext = self.parallel_threads.encrypt(CipherData::clone(&cipherdata));
+        let mut ciphertext = self.parallel_threads.encrypt(CipherData::clone(&data));
         
         //encryption/decryption of last portion
-        let ending = FinalThread::finalize_encryption(cipherdata);
+        let ending = FinalThread::finalize_encryption(data);
         ciphertext.extend_from_slice(&ending);
         ciphertext
     }

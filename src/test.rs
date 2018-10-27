@@ -5,25 +5,29 @@ mod tests {
     use jacopone::*;
     use self::rand::prelude::*;
     use self::rand::Rng;
-    use std::sync::Arc;
+
 	use std::fs::File;	
 	use std::io::prelude::*;
 
     #[test]
     fn check_decrypt() {
-
     	let mut rng = thread_rng();
         let jacopone = Jacopone::new(4);
-    	let mut message = lines_from_file("/home/casa/Documenti/jacopone/strings2.txt");
+    	let mut message = lines_from_file("/home/zeegomo/Documents/crypto/ciphers/jacopone/src/strings.txt");
 		for i in 0..message.len() {
 			let mut nonce: Vec<u8> = Vec::new();
 			for j in 0..60 {
 				nonce.push(rng.gen());
 			}
-			let key = [10, 7, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44];
+			let key = vec![10, 7, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44];
 			let counter: u64 = rand::random::<u64>();
-			let ciphertext = jacopone.encrypt(Arc::new((&message[i]).as_bytes().to_vec()), Arc::new(key.to_vec()), Arc::new(nonce.to_vec()), counter);
-			let plaintext = jacopone.encrypt(Arc::new(ciphertext), Arc::new(key.to_vec()), Arc::new(nonce.to_vec()), counter);
+            let data = CipherData::new((&message[i]).as_bytes().to_vec(), &key, &nonce, counter);
+			let ciphertext = jacopone.encrypt(data);
+            let data = CipherData::new(ciphertext, &key, &nonce, counter);
+            
+			let plaintext = jacopone.encrypt(data);
+
+			//println!("{} {}", (&message[i]).as_bytes().len(), plaintext.len());
 
         	assert_eq!(&message[i].as_bytes().to_vec(), &plaintext);
     	}
