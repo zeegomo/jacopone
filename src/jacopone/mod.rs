@@ -3,7 +3,6 @@ pub mod cipherdata;
 
 pub use self::cipherdata::*;
 use self::thread::{ParallelThread, FinalThread};
-use std::sync::Arc;
 
 pub struct Jacopone{
     parallel_threads: ParallelThread,

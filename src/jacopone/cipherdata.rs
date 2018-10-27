@@ -9,8 +9,8 @@ pub struct CipherData{
 
 impl CipherData {
 
-    pub fn new (message: Vec<u8>, key: &Vec<u8>, nonce: &Vec<u8>, counter: u64) -> CipherData {
-        CipherData {message: Arc::new(message), key: Arc::new(key.to_vec()), nonce: Arc::new(nonce.to_vec()), counter: counter}
+    pub fn new (message: Vec<u8>, key: Vec<u8>, nonce: Vec<u8>, counter: u64) -> CipherData {
+        CipherData {message: Arc::new(message), key: Arc::new(key), nonce: Arc::new(nonce), counter: counter}
     }
 
     pub fn clone(other: &CipherData) -> CipherData {

@@ -21,9 +21,9 @@ mod tests {
 			}
 			let key = vec![10, 7, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44, 21, 33, 32, 76, 54, 45, 12, 87, 09, 12, 43, 87, 43 ,23, 44];
 			let counter: u64 = rand::random::<u64>();
-            let data = CipherData::new((&message[i]).as_bytes().to_vec(), &key, &nonce, counter);
+            let data = CipherData::new((&message[i]).as_bytes().to_vec(), key.clone(), nonce.clone(), counter);
 			let ciphertext = jacopone.encrypt(data);
-            let data = CipherData::new(ciphertext, &key, &nonce, counter);
+            let data = CipherData::new(ciphertext, key, nonce, counter);
             
 			let plaintext = jacopone.encrypt(data);
 

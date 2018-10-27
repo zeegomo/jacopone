@@ -1,14 +1,14 @@
 extern crate crypto;
 extern crate crossbeam;
-use std::time::{Instant};
+
 
 mod jacopone;
 mod test;
 
+use std::time::{Instant};
 use std::fs::File;	
 use std::io::prelude::*;
 use std::env;
-use std::sync::Arc;
 use jacopone::*;
 
 fn main() {
@@ -22,7 +22,7 @@ fn main() {
 		let now = Instant::now(); 
 		let threads  = u8::from_str_radix(&args[5], 10).unwrap();
 
-		let data = CipherData::new(message, &key, &nonce, counter);
+		let data = CipherData::new(message, key, nonce, counter);
         let jacopone = jacopone::Jacopone::new(threads);
         let ciphertext = jacopone.encrypt(data);
         println!("{:?}",now.elapsed().as_secs() as f64

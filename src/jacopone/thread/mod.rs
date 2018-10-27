@@ -4,7 +4,6 @@ mod utils;
 
 use super::cipherdata::*;
 use self::utils::*;
-use std::sync::Arc;
 use self::cipher::*;
 
 
