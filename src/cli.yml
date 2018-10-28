@@ -1,0 +1,33 @@
+name: jacopone
+version: "0.1.0"
+author: Giacomo P. <g.pasini98@gmail.com>
+about: Encrypt and Decrypt using Jacopone CTR
+args:
+    - INPUT: 
+        help: Select file to encrypt
+        required: true
+        index: 1
+    - KEY:    
+        help: Sets the key to use
+        required: true
+        index: 2
+    - NONCE:    
+        help: Sets the nonce to use
+        required: true
+        index: 3
+    - COUNTER:    
+        help: Sets the counter to use
+        required: true
+        index: 4
+    - threads:
+        short: t
+        long: threads
+        value_name: THREADS
+        help: Sets number of threads to use
+        takes_value: true
+    - output:
+        short: o
+        long: output
+        value_name: OUTPUT
+        help: Specify destination file
+        takes_value: true
