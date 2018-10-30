@@ -12,5 +12,15 @@ A key schedule is currently under development.
 This construction scheme, still subject to change, is based on work by M. Luby and C. Rackoff and should be, at least theoretically,
 not obviously wrong.
 
+### Benchmarks:
+**CPU: i5-3330 (quad-core)**
 
+| Input size | n of thread | time |
+|------------|------------:|-----:|
+| 1.0 MB     |1            |0.2s  |
+| 1.0 MB     |2            |0.1s  |
+| 1.0 MB     |4            |0.06s |
+| 100 MB     |1            |19.4s |
+| 100 MB     |2            |9.8s  |
+| 100 MB     |4            |5.3s  |
 
