@@ -15,7 +15,7 @@ not obviously wrong.
 ### Benchmarks:
 **CPU: i5-3330 (quad-core)**
 
-| Input size | n of thread | time |
+| Input size | n of threads | time |
 |------------|------------:|-----:|
 | 1.0 MB     |1            |0.2s  |
 | 1.0 MB     |2            |0.1s  |
