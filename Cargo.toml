@@ -5,4 +5,4 @@ authors = ["zeegomo <g.pasini98@gmail.com>"]
 
 [dependencies]
 clap = { version = "2.32.0", features = ["yaml"]}
-jacopone = "0.1.0"
+jacopone = "0.1.1"
