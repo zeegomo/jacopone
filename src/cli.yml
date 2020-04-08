@@ -17,14 +17,7 @@ args:
         index: 3
     - COUNTER:    
         help: Sets the counter to use
-        required: true
         index: 4
-    - threads:
-        short: t
-        long: threads
-        value_name: THREADS
-        help: Sets number of threads to use
-        takes_value: true
     - output:
         short: o
         long: output
