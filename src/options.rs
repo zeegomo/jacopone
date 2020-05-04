@@ -47,13 +47,14 @@ impl JFunction {
 
 arg_enum! {
     pub enum JScheduler {
-        Dummy
+        Dummy,
+        PBKDF,
     }
 }
 
 impl Default for JScheduler {
     fn default() -> JScheduler {
-        JScheduler::Dummy
+        JScheduler::PBKDF
     }
 }
 
@@ -61,6 +62,7 @@ impl JScheduler {
     pub fn to_jacopone(&self) -> Scheduler {
         match self {
             Self::Dummy => Scheduler::Dummy,
+            Self::PBKDF => Scheduler::PBKDF,
         }
     }
 }
