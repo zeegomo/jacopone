@@ -2,34 +2,102 @@
 extern crate clap;
 extern crate jacopone;
 
-use clap::App;
+use clap::{App, Arg, ErrorKind::ArgumentNotFound};
 use jacopone::*;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::Instant;
 
+mod options;
+use options::*;
+
+macro_rules! get_arg_or_default {
+    ($matc:ident, $str:expr, $expl:expr, $enum:ty) => {
+        value_t!($matc.value_of($str), $enum)
+            .unwrap_or_else(|e| {
+                if e.kind != ArgumentNotFound {
+                    panic!("invalid {} value", $expl);
+                }
+
+                <$enum>::default()
+            })
+            .to_jacopone();
+    };
+}
+
 fn main() {
     let yaml = load_yaml!("cli.yml");
-    let matches = App::from_yaml(yaml).get_matches();
-
-    let mut message = get_text_from_file(matches.value_of("INPUT").unwrap());
-    let mut key = matches.value_of("KEY").unwrap().as_bytes().to_vec();
-    key.resize(32, 0);
-    let nonce = matches.value_of("NONCE").unwrap().as_bytes().to_vec();
+    let matches = App::from_yaml(yaml)
+        .arg(
+            Arg::with_name("mode")
+                .help("specify the block cipher mode")
+                .short("m")
+                .takes_value(true)
+                .possible_values(&JMode::variants()),
+        )
+        .arg(
+            Arg::with_name("ks")
+                .help("specify the key scheduling")
+                .short("ks")
+                .takes_value(true)
+                .possible_values(&JScheduler::variants()),
+        )
+        .arg(
+            Arg::with_name("padding")
+                .help("specify the padding used")
+                .short("p")
+                .takes_value(true)
+                .possible_values(&JPadding::variants()),
+        )
+        .arg(
+            Arg::with_name("rfunction")
+                .help("specify the round function")
+                .short("f")
+                .takes_value(true)
+                .possible_values(&JFunction::variants()),
+        )
+        .get_matches();
 
     let output = matches
         .value_of("output")
         .unwrap_or(matches.value_of("INPUT").unwrap());
 
+    let mut message = get_text_from_file(matches.value_of("INPUT").unwrap());
+    let mut key = matches.value_of("KEY").unwrap().as_bytes().to_vec();
+    key.resize(32, 0);
+
+    let nonce_vec = matches
+        .value_of("nonce")
+        .map(|nonce| nonce.as_bytes().to_vec());
+
+    let nonce = if let Some(ref vec) = nonce_vec {
+        Some(vec as &[u8])
+    } else {
+        None
+    };
+
     let now = Instant::now();
-    println!("Encrypting {} bytes...", message.len());
-    let jacopone = Jacopone::<ModeCTR, Sha2, Dummy>::new();
-    jacopone.encrypt(&mut message, &key, &nonce);
+
+    let function = get_arg_or_default!(matches, "rfunction", "round function", JFunction);
+    let ks = get_arg_or_default!(matches, "ks", "key scheduler", JScheduler);
+    let padding = get_arg_or_default!(matches, "padding", "padding", JPadding);
+    let mode = get_arg_or_default!(matches, "mode", "mode", JMode);
+
+    let jacopone = Jacopone::new(mode, function, ks, padding);
+
+    if matches.is_present("DECRYPT") {
+        println!("Decrypting {} bytes...", message.len());
+        jacopone.decrypt(&mut message, &key, nonce);
+    } else {
+        println!("Encrypting {} bytes...", message.len());
+        jacopone.encrypt(&mut message, &key, nonce);
+    }
 
     println!(
         "Done: {:?}",
         now.elapsed().as_secs() as f64 + now.elapsed().subsec_nanos() as f64 * 1e-9
     );
+
     write_to_file(output, &message);
 }
 
